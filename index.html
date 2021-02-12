@@ -285,14 +285,24 @@ Promise.all([
 
 L.Control.Legend = L.Control.extend({
   onAdd: function(map) {
-    const scale = L.DomUtil.create('div');
+    const container = L.DomUtil.create('div');
+		container.style.backgroundColor = 'white';
+    container.style.pointerEvents = 'none';
+    container.style.padding = '4px 8px';
+		container.className = 'leaflet-control-layers';
 
+		const title = L.DomUtil.create('h2');
+		title.textContent = 'Legend';
+		title.style.fontSize = '14px';
+		title.style.fontWeight = 'bold';
+		title.style.margin = '0 0 6px 0';
+		container.appendChild(title);
+
+    const scale = L.DomUtil.create('div');
+		scale.style.position = 'relative';
     scale.style.width = '200px';
     scale.style.height = '18px';
-    scale.style.border = '4px solid #ccc';
-    scale.style.borderRadius = '8px';
-    scale.style.pointerEvents = 'none';
-
+		scale.style.margin = '0 0 8px 0';
     const leftLabel = L.DomUtil.create('span');
     leftLabel.textContent = '0%';
     leftLabel.style.position = 'absolute';
@@ -303,15 +313,30 @@ L.Control.Legend = L.Control.extend({
     rightLabel.style.position = 'absolute';
     rightLabel.style.right = '3px';
     scale.appendChild(rightLabel);
-
     map.on('baselayerchange', l => {
       const color = eventTypes[l.name].color;
       scale.style.background = 'linear-gradient(90deg, ' +
         'rgba(0,0,0,0) 0%, ' +
         color + ' 100%)';
     });
+		container.appendChild(scale);
 
-    return scale;
+    const stripes = L.DomUtil.create('div');
+		stripes.style.margin = '0 0 6px 0';
+    const stripesIcon = L.DomUtil.create('div');
+		stripesIcon.style.display = 'inline-block';
+		stripesIcon.style.verticalAlign = 'baseline';
+		stripesIcon.style.width = '40px';
+    stripesIcon.style.height = '14px';
+		stripesIcon.style.background = 'repeating-linear-gradient( -45deg, gray, gray 0.9px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 6px )';
+    const stripesLabel = L.DomUtil.create('span');
+		stripesLabel.textContent = 'insufficient data';
+		stripesLabel.style.marginLeft = '4px';
+		stripes.appendChild(stripesIcon);
+		stripes.appendChild(stripesLabel);
+		container.appendChild(stripes);
+
+    return container;
   }
 });
 L.control.legend = function(opts) {
