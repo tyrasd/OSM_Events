@@ -191,17 +191,52 @@ const baseLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', 
   maxZoom: 19
 }).addTo(map);
 new L.Hash(map);
-var stripes = new L.StripePattern({
-	weight: 1,
-	spaceWeight: 3,
-	color: "#000",
-	spaceColor: "#eeeeee",
-	opacity: 0.5,
-	spaceOpacity: 0.2,
-	height: 4,
-	angle: -45
-});
-stripes.addTo(map);
+
+function addGlobalNone(data) {
+	const zoomBreak = 4;
+	const stripes1 = new L.StripePattern({
+		weight: 1,
+		spaceWeight: 5,
+		color: "#000",
+		spaceColor: "#eeeeee",
+		opacity: 0.25,
+		spaceOpacity: 0.2,
+		height: 6,
+		angle: -45
+	});
+	stripes1.addTo(map);
+	const stripes2 = new L.StripePattern({
+		weight: 1,
+		spaceWeight: 3,
+		color: "#000",
+		spaceColor: "#eeeeee",
+		opacity: 0.5,
+		spaceOpacity: 0.2,
+		height: 4,
+		angle: -45
+	});
+	stripes2.addTo(map);
+	const stripeLayer = L.geoJSON(data, {
+		style: {
+			weight: 0,
+			fillPattern: map.getZoom() > zoomBreak ? stripes2 : stripes1,
+			fillOpacity: 1
+		}
+	}).addTo(map);
+	var mapZoom = map.getZoom();
+	map.on('zoomstart', function () {
+		mapZoom = map.getZoom();
+	});
+	map.on('zoomend', function (e) {
+	  const currentZoom = map.getZoom();
+	  if (mapZoom > zoomBreak && currentZoom <= zoomBreak) {
+	    stripeLayer.setStyle({ fillPattern: stripes1 });
+	  } else if (mapZoom <= zoomBreak && currentZoom > zoomBreak) {
+	    stripeLayer.setStyle({ fillPattern: stripes2 });
+	  }
+		mapZoom = map.getZoom();
+	});
+}
 
 const eventTypes = {
   'Local knowledge event': { max: 100, color: "#e41a1c" },
@@ -230,14 +265,7 @@ Promise.all([
 ]).then(data => {
   const grid = data[0];
 	const global = data[2];
-	L.geoJSON(global, {
-		style: {
-			weight: 0,
-			//fillColor: "white",
-			fillPattern: stripes,
-			fillOpacity: 1
-		}
-	}).addTo(map);
+	addGlobalNone(global);
   const valuesMap = {};
   data[1].split('\n').slice(1, -1).map(l => l.split(',')).forEach(l => {
     valuesMap[l[0]] = {
